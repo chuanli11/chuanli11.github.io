@@ -5,6 +5,10 @@ date:   2019-07-04 10:00:00
 categories: jekyll
 ---
 
+**Contents**
+* TOC
+{:toc}
+
 This website is made with [Jekyll](https://jekyllrb.com/), a middle man between your favorite markup language and a extendable, beautiful static website.
 
 ### Basic Setup
@@ -111,7 +115,20 @@ Create a `_layout` folder in the root directory. Add [`default.html`](https://gi
 
 
 
-#### Add Sticky Table of Content
+#### Add Table of Content
 
+Unfortunately, Github Pages only have limited support for Jekyll gems. For this reason, the `jeklyy-toc` gem only works locally. Once pushed to Github page, the table of content will disappear. 
+
+Fortunately, rendering of table of content is supported by kramdown, the current default Markdown processor and the only supported Markdown processor on Githug Pages. Adding the following code snippet to each post will create a table of content:
+
+```
+---
+front matter
+---
+
+* TOC
+{:toc}
+```
+#### Reference
 
 [^BigFoot]: This is how a nice popup footnote looks like!
