@@ -92,7 +92,7 @@ Download [jQuery](https://code.jquery.com/jquery-3.4.1.min.js)
 
 Create a `js` folder in the root directory. Copy `jquery-3.4.1.js` and `bigfoot.min.js` there.
 
-Create a `css` folder in the root directory. Add a `default.scss` file with the following content:
+Create a `css` folder in the root directory. Add a `style.scss` file with the following content:
 
 ```
 ---
@@ -107,7 +107,8 @@ Create a `_sass` folder in the root directory. Copy the `bigfoot-number.scss` fi
 @import "bigfoot-number";
 ```
 
-Create a `_layout` folder in the root directory. Add [`default.html`](https://github.com/chuanli11/chuanli11.github.io/_layouts/default.html) file.
+Create a `_layout` folder in the root directory. Add [`default.html`](https://github.com/chuanli11/chuanli11.github.io/blob/master/_layouts/default.html) file.
+
 
 
 #### Add Sticky Table of Content
