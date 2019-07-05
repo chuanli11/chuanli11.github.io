@@ -82,6 +82,35 @@ Fill in some basic information in `_config.yml` and `about.md`
 Creat this blog to walk through the step of creating this website. Remove the welcome post created by Jekyll.
 
 #### Add Pop Footnote
+I use the [Bigfoot](http://www.bigfootjs.com/) jQuery plugin to enable popup footnote. This is extremely helpful for writing long articles as one does not need to jump between the content and the footnote[^BigFoot].
+
+The instructions are copied from this [blog](https://sherif.io/2014/11/07/Bigfoot-in-Jekyll.html):
+
+Download [Bigfoot](http://www.bigfootjs.com/)
+
+Download [jQuery](https://code.jquery.com/jquery-3.4.1.min.js) 
+
+Create a `js` folder in the root directory. Copy `jquery-3.4.1.js` and `bigfoot.min.js` there.
+
+Create a `css` folder in the root directory. Add a `default.scss` file with the following content:
+
+```
+---
+# This is the main default style sheet
+---
+@import "main";
+```
+
+Create a `_sass` folder in the root directory. Copy the `bigfoot-number.scss` file into it. Also add a `main.scss` file with a following content:
+
+```
+@import "bigfoot-number";
+```
+
+Create a `_layout` folder in the root directory. Add [`default.html`](https://github.com/chuanli11/chuanli11.github.io/_layouts/default.html) file.
+
 
 #### Add Sticky Table of Content
 
+
+[^BigFoot]: This is how a nice popup footnote looks like!
