@@ -1,4 +1,29 @@
 ---
 # This is the main default style sheet
 ---
-@import "main";
+@charset "utf-8";
+
+
+// Our variables
+$spacing-unit:     10px;
+$image-size:       50px;
+$icon-size:        15px;
+
+
+// Sizes
+$on-palm:          768px;
+
+
+@mixin media-query($device) {
+    @media screen and (max-width: $device) {
+        @content;
+    }
+}
+
+
+// Import partials from `sass_dir` (defaults to `_sass`)
+@import
+        "main",
+        "highlight",
+        "bigfoot-number"
+;
