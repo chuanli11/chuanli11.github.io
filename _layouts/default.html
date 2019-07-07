@@ -18,19 +18,7 @@
 
   <link rel="stylesheet" type="text/css" href="{{ "/css/style.css" | prepend: site.baseurl }}">
   
-<!--   <body class="hack dark">
-
-    {%- include header.html -%}
-    
-    <main class="page-content" aria-label="Content">
-      <div class="wrapper">
-        {{ content | toc }}
-      </div>
-    </main>
-
-    {%- include footer.html -%}
-  </body> -->
-
+  <body class="hack dark">
 
     {% include github-ribbon.html %}
 
@@ -41,8 +29,9 @@
         </aside>
 
         <main class="cell -9of12">
-          {{ content }}
+          {{ content | toc }}
         </main>
+
       </div>
 
     {% include footer.html %}
@@ -51,6 +40,6 @@
 
     <!-- Prism.js -->
     <script src="https://npmcdn.com/prismjs@1.5.1/prism.js"></script>
-
+  </body>
 
 </html>
