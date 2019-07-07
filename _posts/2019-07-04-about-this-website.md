@@ -94,7 +94,8 @@ Download [Bigfoot](http://www.bigfootjs.com/)
 
 Download [jQuery](https://code.jquery.com/jquery-3.4.1.min.js) 
 
-Create a `js` folder in the root directory. Copy `jquery-3.4.1.js` and `bigfoot.min.js` there.
+Create a `js` folder in the root directory. Copy `jquery-3.4.1.js` and `bigfoot.js` there. Set `useFootnoteOnlyOnce: false` in `bigfoot.js` to enable bigfoot on multiple references of the same footnote.
+
 
 Create a `css` folder in the root directory. Add a `style.scss` file with the following content:
 
