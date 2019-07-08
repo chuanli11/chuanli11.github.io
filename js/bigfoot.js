@@ -5,7 +5,17 @@
       bigfoot = void 0;
       defaults = {
         actionOriginalFN: "hide",
-        activateCallback: function() {},
+        // activateCallback: function() {},
+        activateCallback: function($popover, $button) {
+        if (MathJax && !$button.data('mathjax-processed')) {
+            var content_wrapper = $popover.find('.bigfoot-footnote__content')[0];
+            MathJax.Hub.Queue(['Typeset', MathJax.Hub, content_wrapper]);
+            MathJax.Hub.Queue(function () {
+                $button.attr('data-bigfoot-footnote', content_wrapper.innerHTML);
+                $button.data('mathjax-processed', true);
+            });
+          }
+        },
         activateOnHover: false,
         allowMultipleFN: false,
         anchorPattern: /(fn|footnote|note)[:\-_\d]/gi,
@@ -17,7 +27,7 @@
         hoverDelay: 250,
         numberResetSelector: void 0,
         popoverDeleteDelay: 300,
-        popoverCreateDelay: 100,
+        popoverCreateDelay: 300,
         positionContent: true,
         preventPageScroll: true,
         scope: false,

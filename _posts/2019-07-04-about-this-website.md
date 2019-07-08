@@ -11,6 +11,27 @@ categories: jekyll
 
 This website is made with [Jekyll](https://jekyllrb.com/), a middle man between your favorite markup language and a extendable, beautiful static website.
 
+This is the instruction to run the website locally
+
+```
+sudo apt-get install ruby-full build-essential zlib1g-dev
+
+echo '# Install Ruby Gems to ~/gems' >> ~/.bashrc
+echo 'export GEM_HOME="$HOME/gems"' >> ~/.bashrc
+echo 'export PATH="$HOME/gems/bin:$PATH"' >> ~/.bashrc
+source ~/.bashrc
+
+git clone https://github.com/chuanli11/chuanli11.github.io.git
+
+
+cd chuanli11.github.io
+
+bundle install
+
+bundle exec jekyll serve
+```
+
+
 ### Basic Setup
 
 I started by hosting on Github a basic website using Jekyll's default minima theme.
@@ -129,6 +150,23 @@ front matter
 
 * TOC
 {:toc}
+```
+
+#### Make MathJax work with Bigfoot
+
+By default the equations only show at the bottom, not the popup footnotes. I use this [solution](https://esham.io/2014/07/mathjax-and-bigfoot) to fix it. Basically, update the bigfoot.js with this change:
+
+```
+activateCallback: function($popover, $button) {
+if (MathJax && !$button.data('mathjax-processed')) {
+    var content_wrapper = $popover.find('.bigfoot-footnote__content')[0];
+    MathJax.Hub.Queue(['Typeset', MathJax.Hub, content_wrapper]);
+    MathJax.Hub.Queue(function () {
+        $button.attr('data-bigfoot-footnote', content_wrapper.innerHTML);
+        $button.data('mathjax-processed', true);
+    });
+  }
+},
 ```
 #### Reference
 
