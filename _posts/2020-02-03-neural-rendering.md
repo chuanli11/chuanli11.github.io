@@ -14,7 +14,7 @@ toc: true
 
 Because rendering is such a massive topic, I’d like to start the conversation with some clarification. 
 
-As far as this article goes, rendering can be both a forward and an inverse process. Forward rendering computes images from some parameters of a scene, such as the camera positions, the shape and the color of the objects, the light sources etc. Forward rendering has been a major research topic in computer graphics. The opposite of this process is called inverse rendering: given some images, inverse rendering reconstructs the scene that was used to produce the input images. Inverse rendering is closely related to many problems in computer vision. For example, shape from X, motion capture etc.
+As far as this article goes, rendering can be both a __forward__ and an __inverse__ process. Forward rendering computes images from some parameters of a scene, such as the camera positions, the shape and the color of the objects, the light sources etc. Forward rendering has been a major research topic in computer graphics. The opposite of this process is called inverse rendering: given some images, inverse rendering reconstructs the scene that was used to produce the input images. Inverse rendering is closely related to many problems in computer vision. For example, shape from X, motion capture etc.
 
 Forward rendering and inverse rendering are intrinsically related because, the higher levels of a vision system should look like the representations used in graphics. We will look into both forward and inverse rendering in this article. In particular, how neural networks can improve the solutions to both these problems.
 
@@ -25,19 +25,20 @@ However, before diving into deep learning, let us first pay a quick visit to the
 
 This is a toy example of ray tracing, a widely used forward rendering technique. Imagine we are inside a cave. The red bar is the light source, and the grid is the image plane. Ray tracing works by tracing a path from an imaginary eye through each pixel and calculating the color of the objects that are visible through the ray.
 
-More often than not, the path will hit an object surface before reaching the light source. In which case the algorithm will assign the color of surface to the pixel. The color of the surface is computed as the integral of the incident radians at the intersection point. Most of the time these integrals have no analytic solutions and have to be computed via Monte Carlo Sampling: 
-some samples are randomly drawn from the integral domain, and the average of their contributions are computed as the integral.
+<img src="/assets/nr/raytracing.png" width="600">
+Figure 1: Ray Tracing.
 
-
-To model different surface materials, reflectance distribution functions is used to guide the sampling process. These functions decide how glossy or rough the surfaces are.
+In the left picture of Figure 1, the path reaches the light source, whose color is assigned to the pixel. But more often than not, the path will hit an object surface before reaching the light source (the middle, Figure 1). In which case the algorithm will assign the color of surface to the pixel. The color of the surface is computed as the integral of the incident radians at the intersection point. Most of the time these integrals have no analytic solutions and have to be computed via Monte Carlo Sampling: 
+some samples are randomly drawn from the integral domain, and the average of their contributions are computed as the integral. To model different surface materials, reflectance distribution functions are used to guide the sampling process (the right, Figure 1). These functions decide how glossy or rough the surfaces are.
 
 Most of the time, a ray needs multiple bounces before reaching the light source. Such a recursive ray tracing process can be very expensive. Different techniques have been used to speed up the process. To name a few: next event estimation, bidirectional path tracing, Metropolis Light Transportation ... etc. I will skip all of them due to page limit. In general, Monte Carlo ray tracing has high estimator variance and low convergence rate. This means a complex scene will need hundreds of millions, if not billions, rays to render. For this reason, we ask the question whether machine learning can help us speedup Monte Carlo ray tracing. 
 
-As we will see later in this artile, the answer is YES.
+As we will see later in this artile, the answer is YES. But before we dive into the answer, let's quickly switch to inverse rendering for a second. I am going to use shape from stereo as a toy example (left, Figure 2). The algorithm takes a pair of photos as the input, and produces a reconstruction of the camera poses P0 and P1 and scene geometry. The first step is to find similar features between the photos. With enough matching, we can estimate the camera motion between these two photos, which is often parameterized by a rotation and translation. Then we can compute the 3D location of these features using triangulation. More photos can be used to improve the quality of the results.
 
-Now, let’s switch to inverse rendering for a second. I am going to use shape from stereo as a toy example. The algorithm takes a pair of photos as the input, and produces a reconstruction of the camera poses P0 and P1 and scene geometry. The first step is to find similar features between the photos. With enough matching, we can estimate the camera motion between these two photos, which is often parameterized by a rotation and translation. Then we can compute the 3D location of these features using triangulation. More photos can be used to improve the quality of the results.
+<img src="/assets/nr/shapefromstereo.png" width="600">
+Figure 2. Left: Shape from stereo. Right: 3D reconstruction from one million images using bundle adjust, a technique invented by Sameer Agarwal et al. 
 
-Advanced technique can scale up to work with thousands or even hundreds of thousands of photos. These photos were taken under a wide range of lighting conditions and camera devices. This is truly amazing.
+Advanced technique can scale up to work with thousands or even hundreds of thousands of photos (right, Figure 2). These photos were taken under a wide range of lighting conditions and camera devices. This is truly amazing.
 
 However, the output point cloud of such computer vision system is usually very sparse. In contrast, computer graphics applications usually demand razor sharp details. So in film and game industry, human still have to step in to polish the results, or handcraft from scratch.
 
@@ -49,9 +50,7 @@ Everytime when we hear the word “handcrafting”, it is a strong signal for ma
 
 #### Neural Networks as Sub-modules for MC Ray Tracing
 
-First, let’s see how neural networks can help as a sub-module that speeds up Monte Carlo ray tracing. As mentioned earlier, Monte Carlo ray tracing needs many samples to converge. And here is an example: 
-
-the top left picture is the Monte Carlo ray tracing result using 1 sample per pixel, and it doubles from left to right each square. The computational cost also increases linearly with the number of samples, which motivates us to develop efficient rendering techniques at a reduced sample rate. 
+First, let’s see how neural networks can help as a sub-module that speeds up Monte Carlo ray tracing. As mentioned earlier, Monte Carlo ray tracing needs many samples to converge. You can find an concrete example here[^pathtracingsamplingvalues]. 
 
 I’d like to make a fuzzy analogy here. You probably have heard of AlphaGO, which uses a value network and a policy network to speed up the MC tree search: the value network takes the board position as its input, and outputs a scalar value that predicts the winning probability. In other words, the value network reduces the depth of the search. The policy network similarly also takes the board position as its input, but it outputs a probability distribution over the best moves to take. In other words, the policy network reduces the breadth of the search.
 
@@ -62,32 +61,32 @@ For example, the value network can be used to denoise renderings with low sample
 
 ##### Neural Denoising for Monte Carlo Ray Tracing
 
-Let’s first discuss the value network approach. This is a recent work about denoising MC renderings. On the left is the noisy input image that was rendered with only 4 samples per pixel. In the middle is the output of the denoiser. On the right is the GT rendered with 32k spp. It takes 90 minutes to render with a 12 core intel i9 CPU. 
+Let’s first discuss the value network approach. Figure 3 demonstrates a recent technique for denoising MC renderings: 
 
-In contrast, the denoiser only takes a second to finish the rendering with a commodity GPU. So it gives a good trade off between speed and quality.
+<img src="/assets/nr/neuraldenoising1.png" width="600">
+Figure 3. Adversarial Monte Carlo denoising with conditioned auxiliary feature modulation. B Xu et al. Siggraph Asia 2019.
 
+On the left is the noisy input image that was rendered with only 4 samples per pixel. In the middle is the output of the denoiser. On the right is the ground truth rendered with 32k spp. The ground truth image takes 90 minutes to render with a 12 core intel i9 CPU. In contrast, the denoiser only takes a second to finish the rendering with a commodity GPU -- a very good trade off between speed and quality.
 
+The denoiser network (Figure 4, left) is based on the auto-encoder architecture trained with L1 loss on VGG features maps, plus adversarial loss for retaining sharp details. And this[^denoising_gan_vs_nogan] is a comparison between training with and without the GAN loss. The one with adversarial loss is clearly better in recovering the details.
 
-The denoiser network is based on the auto-encoder architecture. It is trained with L1 loss on VGG features maps, plus adversarial loss for retaining sharp details. And this is the comparison between training with and without the GAN loss. The one with adversarial loss is clearly better in recovering the details.
+<img src="/assets/nr/neuraldenoising3.png" width="600">
+Figure 4. Left: Network architecture for B Xu et al. Siggraph Asia 2019. Right: Elementwise biasing and scaling for injecting auxiliary features.
 
 There are many literature about denoising natural images. However, denoising MC rendering is unique in a few ways:
 
 Frist, one can separate the diffuse and specular components, so they go through different paths of the network, and the outputs are merged together. Studies found this gave better results in practice.
 
-Second, there are inexpensive by-products, such by-product include albedo, normal, and depth maps, that can be used to improve the results. One can feed them into the network as auxiliary features. These features give the network further context where the denoising process should be conditioned on. Finding an effective way to use auxiliary features is an open research question. 
+Second, there are inexpensive by-products, such by-product include albedo, normal, and depth maps, that can be used to improve the results. One can feed them into the network as auxiliary features. These features give the network further context where the denoising process should be conditioned on. 
 
-One popular method is called element-wise biasing and scaling: Element-wise biasing transforms the auxiliary features through a sequence of convolutional layers, and add the output to X. And one can proof that it is equivalent to feature concatenation. Element-wise caling runs multiplication between the input X and the auxiliary features.
+Finding an effective way to use auxiliary features is an open research question. We used a method that is called __element-wise biasing and scaling__ (Figure 4, right): Element-wise biasing transforms the auxiliary features through a sequence of convolutional layers, and add the output to X. One can prove that it is equivalent to feature concatenation. Element-wise caling runs multiplication between the input X and the auxiliary features. The argument of having both biasing and scaling is that they capture different relationships between two inputs: intuitively, biasing functions as a “OR” operation that checks if a feature is in either one of the two inputs, where scaling functions as a “AND” operation that checks if a feature is in both of the two inputs. Together they allow auxiliary feature to be better utilized in the denoising process.
 
-
-The argument of having both biasing and scaling is that they capture different relationships between two inputs: intuitively, biasing functions as a “OR” operation that checks if a feature is in either one of the two inputs, 
-where scaling functions as a “AND” operation that checks if a feature is in both of the two inputs. Together they allow auxiliary feature to be better utilized in the denoising process.
-
-Here is a comparison between the neural denoising method and alternative methods at 4 SPP. As you can see, the neural denoiser method produces less artifacts and better details.
+Here[^neuraldenoising_results] is a comparison between the neural denoising method and alternative methods at 4 SPP. As you can see, the neural denoiser method produces less artifacts and better details.
 
 
 One important aspect of video denoising is temporal coherence. Remember Neural Networks is a complicated nonlinear function, which may map input values that are close to each other to somewhere really far away in the output space. The consequence is that if we denoise a video frame by frame, there might be unpleasant flickering between the frames. 
 
-To improve the temporal coherence, one can use a recurrent architecture. This is first described in a paper from NVIDIA research. At each time step, the network does not only output a denoised image, but also a hidden state H that encodes the necessary temporal information accumulated from the past. This hidden state, which is highlighted by the orange box, is fed into the network to denoise the next frame.
+To improve the temporal coherence, one can use a recurrent architectur[^nvidia_recurrent_denoiser]. At each time step, the network does not only output a denoised image, but also a hidden state $$h$$ that encodes the necessary temporal information accumulated from the past. This hidden state, which is highlighted by the orange box, is fed into the network to denoise the next frame.
 
 
 
@@ -98,69 +97,79 @@ So far we have been talking about denoiser as the value based approach. Now let'
 
 Neural importance sampling is a technique invented at Disney research. the idea is that, for every location in the scene, we'd like to have a policy that guides the sampling process so the rendering converges faster.
 
-In practice, the best sampling policy we can ask for an arbitary location is the incidence radiance map at that location. Because it tells you where the lights come from.
+In practice, the best sampling policy we can ask for an arbitary location is the incidence radiance map at that location. Because it tells you where the lights come from. The question is, how to generate such incidence radiance map for every location in the 3D scene?
 
-The question is, how to generate such incidence radiance map for every location in the 3D scene?
+Neural importance sampling (Figure 5, left) found an answer in the generative networks literature. Just like how image can be generated from vectors randomly sampled from a normal distribution, incidence radiance map can be generated from a vector of surface properties, including the coordinate of the intersection, the normal of the intersection, the direction of the incoming ray etc. The generative network is trained to map these surface properties to the incidence radiance map. 
 
-The answer can be found in the generative networks literature. Just like how image can be generated from vectors randomly sampled from a normal distribution, incidence radiance map can be generated from a vector of surface properties, include the coordinate of the intersection, the normal of the intersection, the direction of the incoming ray etc. 
-
-The generative network is trained to map the surface properties to the incidence radiance map. 
+<img src="/assets/nr/neural_importance_sampling.png" width="600">
+Figure 5. Neural importance sampling, Thomas Müller et al. ACM Transactions on Graphics 2019.
 
 One unique challenge is the mapping between the surface properties and incidence radiance maps varies from scene to scene. So the learning of the policy network is carried online during the rendering. Meaning the network starts from generating random policies, and incrementally gets better at understanding the scene, and produces more efficient policy accordingly. 
 
-Here is a side-by-side comparison between a regular ray tracing and the ray tracing with neural importance sampling. You can see at low samples per pixel, neural importance sampling is able to achieve much better result.
-
-
+Figure 5, right is a side-by-side comparison between a regular ray tracing and the ray tracing with neural importance sampling. You can see at low samples per pixel, neural importance sampling is able to achieve much better result.
 
 
 #### Neural Networks as an End-to-End Forward Rendering Pipeline
 
 So far we have been talking about neural networks as sub-modules for Monte Carlo ray tracing. Next, we will use it as an end-to-end solution. 
 
-Recall ray tracing casts light rays from pixels to object surfaces. This is an “image centric” approach. 
+Recall ray tracing (Figure 6, left), which casts light rays from pixels to object surfaces. This is an “image centric” approach. 
 
-There is a different approach called rasterization, which cast rays from object surfaces to pixels. This is an “object centric” approach. 
+There is a different approach called rasterization (Figure 6, right), which cast rays from object surfaces to pixels. This is an “object centric” approach. 
 
-There are two main steps in Rasterization: compute visibility and compute shading. To compute visibility, we impose the projected primitives on top of each other based on their distance to the camera, so the front-most objects can be visible. The shading process computes the color of each pixel. It does so by interpolating the color of the vertices. 
+<img src="/assets/nr/rasterization.png" width="600">
+Figure 6. Left: Ray Tracing. Middle: Rasterization. Right: Compute visibility and shading.
+
+There are two main steps in Rasterization: compute visibility and compute shading (Figure 6, right). To compute visibility, we impose the projected primitives on top of each other based on their distance to the camera, so the front-most objects can be visible. The shading process computes the color of each pixel. It does so by interpolating the color of the vertices. 
 
 Rasterization is in general faster than ray tracing because it only use primary ray. It is also easier for neural networks to learn because it does not use sampling or recursion. 
 
 All sounds great except that data format can also be a deal breaker here. 
 
-These are the major 3D data formats for 3D models: depth map, voxels, point cloud and mesh. The truth is some of them are not very friendly to neural networks. 
+<img src="/assets/nr/3d_data.png" width="600">
+Figure 7. Popular 3D data formats.
+
+Figure 7 shows the major 3D data formats for 3D models: depth map, voxels, point cloud and mesh. The truth is some of them are not friendly to neural networks. 
+
 
 ##### Depth Map
 
-So let’s start with the depth Map. Depth map is probably the most the easiest one to use. All you need to do is to change the number of input channels in the first layer, then it is good to go.
+Let’s start with the depth Map. Depth map is probably the most the easiest one to use. All you need to do is to change the number of input channels in the first layer, then it is good to go.
 
 It is also memory efficient -- the mainstream deep learning accelerators are designed to consume image data. So there is no problem here. 
 
 In the meantime, with depth map you get visibility for free. As all the pixels in the depth map come from the front-most surfaces. So the rendering only need to concern the shading. 
 
-There are many literatures about rendering depth map. I am not going into details here due to the page limit.
+There are many literatures[^deepshading] about rendering depth map. I am not going into details here due to the page limit.
 
 ##### Voxels
 
 Next, the voxels. Voxels are also friendly to NN as voxels are stored in a grid. However it is very memory intensive -- it requires one order of magnitude more space than image data. As the result current neural networks can only process low resolution voxels. What is really interesting about voxel data is that it requires to compute both visibility and shading. So there is opportunity to build a true end-to-end solution for neural voxel renderer.
 
-We tried this idea of end-to-end neural voxel rendering called the RenderNet. It started with transforming the voxels into a camera frame. I want to quickly mention that 3D rigid body transformation is something we do not want the network to learn. We will come back to this later but for now, just saying, 3D rigid body transformation is something really easy to do with coordinate transformation but very expensive to do with NN. We will come back to this later.
+<img src="/assets/nr/rendernet_architecture.png" width="600">
+Figure 8. RenderNet: A deep convolutional network for differentiable rendering from 3D shapes. T. Nguyen-Phuoc et al. NeurIPS 2018.
 
-Once the input voxel is transformed into the camera frame, we use a sequence of 3D convolutions to encode it into a latent representation. We call this latent representation neural voxels, where each voxel stores a deep feature that is used to compute visibility and shading.
+We tried this idea of end-to-end neural voxel rendering called the RenderNet (Figure 8). It started with transforming the voxels into a camera frame. I want to quickly mention that 3D rigid body transformation is something we do not want the network to learn. We will come back to this later but for now, just saying, 3D rigid body transformation is something really easy to do with coordinate transformation but very expensive to do with NN. We will come back to this later.
 
-The next step is to compute visibility. One might be tempted to use the standard depth-buffer method. However it is not straight forward for neural voxels. First, the sequence of 3D convolution has diffused values inside the entire grid space, so it is hard to define what is the front-most surface for computing visibility. Second, each voxel stores a deep feature instead of a binary number.  So the projection needs to integrate values across multiple channels to work out the visibility.
+Once the input voxel is transformed into the camera frame, we use a sequence of 3D convolutions to encode it into a latent representation. We call this latent representation neural voxels (Figure 8, output of the orange block), where each voxel stores a deep feature that is used to compute visibility and shading.
+
+The next step is to compute visibility (Figure 8, red block). One might be tempted to use the standard depth-buffer method. However it is not straight forward for neural voxels. First, the sequence of 3D convolution has diffused values inside the entire grid space, so it is hard to define what is the front-most surface for computing visibility. Second, each voxel stores a deep feature instead of a binary number. So the projection needs to integrate values across multiple channels to work out the visibility.
 
 As the solution, RenderNet uses something called the projection unit. The projection unit first reshape the neural voxels from a 4D tensor to a 3D tensor by squeezing the depth dimension and the feature dimension. This is followed by an multilayer perceptron that learns to compute visibility from the 3D tensor. In essence, projection unit is an inception layer that does smart intergration across the depth and feature channels.
 
-The last step computes shading with a sequence of 2D up convolutions. The entire network is trained with mean squared error loss.
+The last step computes shading with a sequence of 2D up convolutions (Figure 8, blue block). The entire network is trained with mean squared error loss.
 
-Here are some results. The first row is the input voxels, and the second row is the Phong shading results created by RenderNet. As you can see, RenderNet is able to compute both the visibility and the shading. RenderNet can also be trained to create different types of shading effects, including Contour image, toon-shading, and Ambient occlusion. 
+Figure 9 shows some results. The left picture shows RenderNet learns to produce different shading effects. The first row shows the input voxels. The second row is the Phong shading results created by RenderNet. As you can see, RenderNet is able to compute both the visibility and the shading correctly. The rest rows of this picture shows that RenderNet can be trained to create different types of shading effects, including contour image, toon-shading, and ambient occlusion. In term of generalization performance, We can also use RenderNet trained on chair models to render new, un-seen objects, for example, the bunny (middle, Figure 9). RenderNet is also able to handle corrupted data (the 2nd row) and data with lower resolution (the 3rd row). The last row renders a scene with multiple objects. Last but not the least, RenderNet can render objects in different poses and scales (right, Figure 9).
 
-In term of generalization performance, we can use the network trained on chair models to render new, un-seen objects, for example, the bunny. as well as this scene with multiple objects. RenderNet is also able to handle corrupted data and data with lower resolution, The first row renders the shape with random corruptions. The second row renders a shape that is 50% lower than the training resolution.
+<img src="/assets/nr/rendernet_results1.png" width="600">
+Figure 9. Results of RenderNet. Left: RenderNet can learn to produce different shading effects. Middle: RenderNet trained with chair models can generalize to work with corrupted data, low-resolution data and complex scenes with multiple objects. Right: RenderNet can render an objects from different views and is robust to scale.
 
+RenderNet can also render textured model[^rendernet_textured]. To do so we use a texture network to create a neural texture voxels that can be channel-wised concatenated with the input binary shape voxel. The concatenated voxel is then used as the input of the network. 
 
-RenderNet can also render textured model. To do so we use a texture network to create a neural texture voxels that can be channel-wised concatenated with the input binary shape voxel. The concatenated voxel is then used as the input of the network. Here are some rendering results with comparison to ground truth reference images. The ground truth images are obviously sharper than the rendered results. We think this is due to the fact that only MSE pixel loss was used to train RenderNet. However, the main facial features are well preserved by the RenderNet.
+<img src="/assets/nr/rendernet_texturedmodel_results.png" width="600">
+Figure 10. Results of rendering textured model using RenderNet. Left: comparison with ground truth rendering. Right: mix-and-match shape and texture inputs.
 
-We can also mix-and-match the shape input and the texture input. The first row shows the results rendered with the same shape input but different textures input. The second row shows the results rendered with different shape inputs but the same texture input
+Figure 10 left are some rendering results with comparison to ground truth reference images. The ground truth images are obviously sharper than the rendered results. We think this is due to the fact that only MSE pixel loss was used to train RenderNet. However, the main facial features are well preserved by the RenderNet. Figure 10, right shows that we can also mix-and-match the shape input and the texture input. The first row shows the results rendered with the same shape input but different textures input. The second row shows the results rendered with different shape inputs but the same texture input
 
 ##### Point Cloud
 
@@ -331,3 +340,16 @@ Before ending the discussion, I just want to say that neural rendering is still 
 ### Aknowledgement
 
 I'd like to take the opportunity to thank the amazing colleague and collaborators who did increditable work in developing the techniques described in this article. In particular, Thu Nguyen-Phuoc who did most of the work for RenderNet and HoloGAN; and Bing Xu who developed the neural denoising technique for Monte Carlo Rendering. I also own much of the credits to Yongliang Yang, Stephen Balaban, Lucas Theis, Christian Richardt, Junfei Zhang, Rui Wang, Kun Xu and Rui Tang for their wonderful efforts.
+
+
+[^pathtracingsamplingvalues]:<img src="https://upload.wikimedia.org/wikipedia/commons/e/ea/Path_tracing_sampling_values.png" width="600"> Noise decreases as the number of samples per pixel increases. Image Source: Wikipedia. The top left picture shows one sample per pixel, and doubles from left to right each square. Noise decreases as the number of samples per pixel increases. However, the computational cost also increases linearly with the number of samples, which motivates us to develop more efficient rendering techniques at a reduced sample rate. 
+
+[^denoising_gan_vs_nogan]: <img src="/assets/nr/neuraldenoising2.png" width="600">
+
+[^neuraldenoising_results]: <img src="/assets/nr/neuraldenoising4.png" width="600">
+
+[^nvidia_recurrent_denoiser]: [Interactive Reconstruction of Monte Carlo Image Sequences using a Recurrent Denoising Autoencoder](https://research.nvidia.com/sites/default/files/publications/dnn_denoise_author.pdf)<img src="/assets/nr/neuraldenoising5.png" width="600">
+
+[^deepshading]: [Deep Shading: Convolutional Neural Networks for Screen-Space Shading](http://deep-shading-datasets.mpi-inf.mpg.de/) O. Nalbach et al. EGSR 2017. <img src="/assets/nr/deepshading.jpg" width="600"> Image source: http://deep-shading-datasets.mpi-inf.mpg.de/
+
+[^rendernet_textured]: Using RenderNet to render a textured model. <img src="/assets/nr/rendernet_texturedmodel.png" width="600">
