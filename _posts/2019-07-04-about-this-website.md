@@ -21,6 +21,10 @@ echo 'export GEM_HOME="$HOME/gems"' >> ~/.bashrc
 echo 'export PATH="$HOME/gems/bin:$PATH"' >> ~/.bashrc
 source ~/.bashrc
 
+gem install bundler -v 2.0.2
+gem update --system
+bundle update --bundler
+
 git clone https://github.com/chuanli11/chuanli11.github.io.git
 
 
