@@ -175,26 +175,21 @@ Figure 10 left are some rendering results with comparison to ground truth refere
 
 Next, we have the point cloud. Point cloud is not so friendly to neural networks because it is not arranged in a grid. Especially, the number of samples and the order of samples can also vary, which is not ideal for neural networks. Similarly to voxel, we need to compute both the visibility and the shading. 
 
-First, let’s see how conventional rasterization is done for a point cloud: To compute visibility, each 3D point is projected into a square on the image plane. The side length of a square is inversely proportional to the depth of the 3D point. These squares are imposed onto each using the conventional Z-buffer algorithm. In the shading stage, once can simply use the colour of the 3D point to paint the squares.
+First, let’s see how conventional rasterization is done for a point cloud: To compute visibility, each 3D point is projected into a square on the image plane. The side length of a square is inversely proportional to the depth of the 3D point. These squares are imposed onto each using the conventional Z-buffer algorithm. In the shading stage, once can simply use the colour of the 3D point to paint the squares. Due to the sparsity of the pointcloud and the naive shading process, the result image is often full of holes and colour blobs.
 
-Due to the sparsity of the pointcloud and the naive shading process, the result image is often full of holes and colour blobs.
-
-One interesting technique to improve the result is the Neural Point-Based Graphics method invented by researchers as Samsung AI lab. The key idea is to replace the RGB color information with a learnt neural descriptor. A neural descriptor is an eight-dimensional vector associated with each 3D point. These information stored in the neural descriptors compensate the sparsity of the point cloud. You can see the first three PCA components of the neural descriptor in this image. The descriptors are randomly initialized for each 3D point. Since they encode information from a particular scene, they have to be optimized in both the training and the testing stage.
+One interesting technique to improve the result is the Neural Point-Based Graphics method invented by researchers as Samsung AI lab[^neuralpointbased]. The key idea is to replace the RGB color information with a learnt neural descriptor. A neural descriptor is an eight-dimensional vector associated with each 3D point. These information stored in the neural descriptors compensate the sparsity of the point cloud. You can see the first three PCA components[^neuralpointbased2] of the neural descriptor in this image. The descriptors are randomly initialized for each 3D point. Since they encode information from a particular scene, they have to be optimized in both the training and the testing stage.
 
 An autoencoder is used to render the neural descriptors. During training, the rendering networks is jointly optimized with the descriptors. During testing, the rendering networks is fixed, but the neural descriptors has to be optimized for each new scene.
 
-
-Here are some results, which I think are truly amazing. The cool thing about the neural descriptor is that they are trained to be view invariant. Meaning you once optimized, the point cloud can be rendered in arbitrary views.
+Here[^neuralpointbased2] are some results, which I think are truly amazing. The cool thing about the neural descriptor is that they are trained to be view invariant. Meaning you once optimized, the point cloud can be rendered in arbitrary views.
 
 ##### Mesh
 
 Last, we have the mesh. The graphical representation makes it really difficult for neural network to deal with. But I do want to quickly point out a couple of works
 
-The first work is the Deffered Nerual Rendering technique invented by Thies et al. It is very similar to the neural point cloud method we just talked about in the sense that it use the conventional way to compute visibility, and improves the shading using a neural network. They did this for mesh models.
+The first work is the Deffered Nerual Rendering[^neuraltexture] technique invented by Thies et al. It is very similar to the neural point cloud method we just talked about, which learns a __scene-specific "neural descriptor"__ that improves the conventional RBG based point cloud rasterization. Differently, they did this for mesh models. In particular, their method learns an __object-specific "neural texture"__ that improves the conventional RGB based UV map for low resolution polygon models. 
 
-Another work is this very cool paper called “neural mesh renderer”, which is able to do 3D mesh rendering, as well as 3D neural style. However, their neural network is mainly used to deform a mesh and change its vertex color. The rendering process is largely based on the conventional rasterization method hence is not particularly “neural”. 
-
-I put a reference here for people who are interested in learning more about this technique.
+Another work is this very cool paper called “neural mesh renderer”[^neuralmesh], which is able to do 3D mesh rendering, as well as 3D neural style. However, their neural network is mainly used to deform a mesh and change its vertex color. The rendering process is largely based on the conventional rasterization method hence is not particularly “neural”. 
 
 
 ### Inverse Neural Rendering
@@ -207,9 +202,12 @@ In general, inverse rendering is a very challenging task because every pixel dep
 
 This is how differentiable rendering works:
 
+<img src="/assets/nr/dr_idea.png" width="600">
+Figure 11. Differentiable rendering for model reconstruction.
+
 With a target photo, we can start from an approximate of the scene. This approximation does not need to be very good. All we need to do is being able to render the approximation and compare the result with the target. We can define a loss that quantifies the difference. If the render is differentiable, we can backpropagate the gradient of the loss to update the model. And we do this iteratively until the model converges.
 
-The key is to have the rendering function F differentiable. However, this can be difficult for conventional rendering engines. For example, MC integration has discontinuity based on the distribution of the samples, this makes conventional ray tracing nondifferentiable. 
+The key is that the rendering function has to be differentiable. However, this can be difficult for conventional rendering engines. For example, Monte Carlo integration has discontinuity based on the distribution of the samples, which can make conventional ray tracing nondifferentiable. 
 
 Let’s see what parameters in a path tracer are differentiable, and what are not. 
 
@@ -353,3 +351,11 @@ I'd like to take the opportunity to thank the amazing colleague and collaborator
 [^deepshading]: [Deep Shading: Convolutional Neural Networks for Screen-Space Shading](http://deep-shading-datasets.mpi-inf.mpg.de/) O. Nalbach et al. EGSR 2017. <img src="/assets/nr/deepshading.jpg" width="600"> Image source: http://deep-shading-datasets.mpi-inf.mpg.de/
 
 [^rendernet_textured]: Using RenderNet to render a textured model. <img src="/assets/nr/rendernet_texturedmodel.png" width="600">
+
+[^neuralpointbased]: [Neural Point-Based Graphics](https://dmitryulyanov.github.io/neural_point_based_graphics), Kara-Ali Aliev et al. <img src="/assets/nr/neuralpointbased.png" width="600">
+
+[^neuralpointbased2]: <img src="/assets/nr/neuralpointbased2.png" width="600"> Image source: Neural Point-Based Graphics, Kara-Ali Aliev et al. The first row is point cloud rasterization using RGB colors. The second row is the visualization of the learnt neural descriptor using the first three PCA components. The bottom row is the rasterization using the learnt neural descriptors.
+
+[^neuraltexture]: [Deferred Neural Rendering: Image Synthesis using Neural Textures](https://arxiv.org/pdf/1904.12356.pdf) <img src="/assets/nr/neuraltexture.png" width="600"> 
+
+[^neuralmesh]: [Neural 3D Mesh Renderer](http://hiroharu-kato.com/projects_en/neural_renderer.html) <img src="/assets/nr/neuralmesh.png" width="600"> 
