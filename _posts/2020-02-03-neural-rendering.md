@@ -211,37 +211,48 @@ The key is that the rendering function has to be differentiable. However, this c
 
 Let’s see what parameters in a path tracer are differentiable, and what are not. 
 
-Recall path tracer relies on MC sampling, which we have a toy visualization in this slide. The square represents a pixel in the image plane. The dots are the samples where rays will go through. MC integration computes the mean of these samples E as the estimation of the pixel value. Obviously, E depends on some scene parameters P, such as object geometry, colour and reflectance and light source etc. Differentiable render request the partial derivative of E is computable to all scene parameters. 
+Recall path tracer relies on Monte Carlo sampling, which generates random samples within the intergral domain and computes the average of their contributions (Figure 12, left). Let's use a toy example to illustrate this process: The square represents a zoomed-in pixel in the image plane. The dots are the random samples. Monte Carlo integration uses the mean of these samples, $$E$$, as the estimation of the pixel value. At the sametime, we let $$E$$ to be the output of a (rendering) function with input parameters $$P$$, such as the geometry and the colour of the surface. Differentiable render requests the partial derivative of $$E$$ with respect to $$P$$ to be computable. The question is, is this true for Monte Carlo Rendering?
 
-One way to judge is to see whether the change of p causes continuous change to E. Let’s first look at the surface color. The integral E is actually differentiable with respect to surface colour, because the change of p causes the integral to change smoothly.
+The answer is YES, sometimes.
 
-Now, let p be the surface location. As a toy example, let p controls the vertical translation of the yellow surface, and let the boundary of the surface cut through the interval of integration (the white box). Some sampling points will miss or hit the surface when we change p. This causes E to be discontinuous and non-differentiable with respect to p. 
+Let $$P$$ be the surface color (Figure 12, left). One way to check whether such partial derivative is computable is to see if changing $$P$$ causes continuous changes to $$E$$. In this case, the anser is YES: if all samples intersect with the same surface, then the same color change is applied to all the samples. If samples are from different surfaces, then the change of $$E$$ is a linear combination of the changes from different surfaces, weighted by the number of samples intersects with each surface. In both cases, the derivative $$\frac{\partial E}{\partial P}$$ is computable. 
 
-The discontinuities caused by translation are everywhere in a physically based rendering. Not only in pixel integrals but also in light integrals and BRDF integrals. For example, translating a surface can move it into or out of the radiance of a light source. Similarly, it can also move the surface in or out of the radiance of other surfaces.
+<img src="/assets/nr/dr_case_study.png" width="600">
+Figure 12. Analysis on the differentiability of Monte Carlo ray tracing. Left: Monte Carlo Intergration is differentiable to the change of surface colour, but not to the change of surface location. Right: Such non-differentiability exists for pixel intergal, light intergal and BRDF integral. Image source: Reparameterizing Discontinuous Integrands for Differentiable Rendering, G. Loubet et al.
 
-A lot of effort has been made to make physical based rendering differentiable. For example, one can combine the original MC sampling with additional samples around the discontinuities. The authors showed that one can compute unbiased estimations of partial derivatives. This requires computing silhouette edges that creates discontinuities, which are expensive to do for complex scenes.
+Now, let $$P$$ control the location of a surface (Figure 12, left). As a toy example, let a yellow surface "cut" across the integral domain (the pixel), and $$P$$ to control the vertical translation of the surface. As we move the yellow surface vertically, it will miss or hit the samples, causing $$E$$ to be discontinuous and non-differentiable with respect to $$P$$. 
 
-Another approach that does not involve computing silhouettes is to move the samples with the discontinuity. Howevers, when a scene changes, it is rarely the case that all surfaces will move in the same way. So it is non-trivial to move the samples in such a way that they can follow the changes of the discontinuities in the scene. So assumption of local coherence has to be made in order to have this method work.
+Such discontinuities caused by changing the location, or in general the geometry, of the objects are everywhere in a physically based rendering. Not only in pixel integrals but also in light integrals and BRDF integrals. For example, moving an object can change the shadows and the reflections in the scene (Figure 12, right). 
 
-Finally, one can also modify the step function for integrating samples to be gradual. 
+A lot of effort has been devoted to make physical based rendering differentiable. For example, one can add samples around the discontinuities (surface edges) to compute unbiased estimations of partial derivatives (Figure 13, left). However, this technique requires computing silhouette edges that creates discontinuities, which are expensive to do for complex scenes.
+
+Another approach that does not involve computing silhouettes is to move the samples with the discontinuity (Figure 13, middle). Howevers, when a scene changes, it is rarely the case that all surfaces will move in the same way. So it is non-trivial to move the samples in such a way that they can follow the changes of the discontinuities in the scene. In which case the assumption of local coherence has to be made in order to have this method work.
+
+Finally, one can also modify the (step) integral function to be gradual (Figure 13, right). This idea was implemented as a differentiable mesh rasterization technique[^neuralmesh] that supports single image based mesh reconstruction and 2D-3D style transfer.
+
+In summary, differentiable rendering is non-trivial due to the sampling process used in the conventional rendering techniques. Next, we will discuss neural networks as an alternative solution.
+
+<img src="/assets/nr/dr_conventional_solutions.png" width="600">
+Figure 13. Approaches to make Monte Carlo ray tracing differentiable. Left: Differentiable Monte Carlo Ray Tracing through Edge Sampling, Tzu-Mao Li et al. Middle: Reparameterizing Discontinuous Integrands for Differentiable Rendering, G. Loubet et al. Right: Neural 3D Mesh Renderer, H. Kato et al.
 
 
 #### Neural Differentiable Rendering
 
 Now, let's switch to the neural networks based approach and you can immediately see its advantages. 
 
-First, modern neural networks are made to run back-propagation. This makes them very attractive to be used as a differentiable renderer as we guarantee to get the gradient.
+First, modern neural networks are made to run back-propagation. This makes them very attractive for implementing differentiable renderers, because we basically get the gradient for free.
 
-Secondarily, neural networks can speed up the inverse rendering process. Notice the iterative optimization can be expensive to run and oftentimes is not suitable for real time applications. What neural networks can do is to approximate the optimization as a feedforward process. 
-
-For example, an autoencoder can be used to learn latent representation from images. These representation can then be used for many downstream tasks such as novel view synthesis. 
+Secondarily, neural networks can speed up the inverse rendering process. Notice the iterative optimization can be expensive to run and oftentimes is not suitable for real time applications. What neural networks can do is to approximate the optimization as a feedforward process. For example, an autoencoder can be used to learn latent representation from images. These representation can then be used for many downstream tasks such as scene relighting and novel view synthesis. 
 
 
 ##### Scene Relighting
 
-Let’s use scene relighting as a concrete example. The basic idea of scene relighting is to sample the appearance of a static scene under different lights, then synthesize the scene under a unknown lighting condition using linear combinations of the samples. 
+Let’s use scene relighting as a concrete example. The basic idea of scene relighting (Figure 14) is to sample the appearance of a static scene under different lights, then synthesize the scene under a unknown lighting condition using linear combinations of the samples. 
 
-Here, I is the target appearance, and M is the light transport matrix where each column is a vectorized form of a captured image. L is the coefficients for linear combinations. Obviously this approach relies heavily on data capture as M can be very big.
+<img src="/assets/nr/relighting_paul.png" width="600"> 
+Figure 14. Acquiring the Reflectance Field of a Human Face, P. Debevec et al. Siggraph 2000.
+
+Here, $$I$$ is the target appearance, and $$M$$ is the light transport matrix where each column is a vectorized form of a captured image. $$L$$ is the coefficients for linear combinations. Obviously this approach relies heavily on data capture and $$M$$ is often very big (2048 images were used in the original P. Debevec paper).
 
 So it will be great if there is a way to reduce the number of captured images while still maintain the expressiveness of the light transportation matrix. This should be possible because light transport is highly coherent, resulting in highly similar appearance between nearby views. In other words, there is a lot of redundant information in the nearby samples.
 
@@ -251,20 +262,19 @@ First, it is non-trivial to find a sparse set of views that can represent the sc
 
 Second, with only a handful of samples, it can be really difficult to have high quality synthesized result using linear combination. For example, if individual lights cast hard shadows, their linear combination will create ghosting effects. In contrast, the ground truth image does not such such hard shadows.
 
-It turns out that both of these two problems can be addressed by machine learning. This is a recent work from researchers at UCSD and Adobe. Their method learns a sparse binary matrix to select a handful of images from hundreds or thousands of samples. Then they use a rendering network to non-linearly map the selected images into novel views. Importantly, the selection matrix and the rendering network are jointly trained to give the optimal results.
+It turns out that both of these two problems can be addressed by machine learning. A recent work from researchers at UCSD and Adobe[^relighting_sparse] learns a sparse binary matrix to select a handful of images from hundreds or thousands of samples. A rendering network (autoencoder) then generates novel views from the selected images. The selection matrix and the rendering network are jointly trained to give the optimal results.
 
-The selection matrix is a sparse, binary matrix of size K-by-5, where K is the number of total samples available. Each column in the selection matrix is going to be learnt as a one-hot vector that selects one sample from the light transportation matrix. To enforce each column of the selection matrix to be a one-hot vector, the authors use a softmax layer that uses very large temperature value Alpha, so the probability is concentrated around the positions of the largest input values.
-
-The original light transportation matrix is of dimension P-by-K, where P is the number of pixels in each sample image, and K is the total number of samples. Multiplying the light transportation matrix with the selection matrix gives the reduced light transportation matrix of only five columns. It will be reshaped and then fed into an autoencoder with three headers that reconstructs the direct illumination map, visibility map, and indirect illumination map. These maps are then combined to reconstruct the final output.
-
-The result of this method is pretty awesome. However, it still needs to pre-generate a large number of samples for each scene for selecting the optimal views. The typical number of samples are between 256 to 1052, depending on the angular steps used for sampling. In the meantime, one can not synthesize the same view under different lighting, not the scene from a different view. In other words, it is very good at throwing away redundant information, but is not designed to generate “unseen” data. 
+The result of this method is pretty awesome. However, it still needs to pre-generate a large number of samples for each scene for selecting the optimal views. The typical number of samples are between 256 to 1052, depending on the angular steps used for sampling. In the meantime, although one can synthesize the same view under different lighting, it is impossible to render the scene from a different view. In other words, it is designed to "compress" instead of "extrapolate".
 
 
 ##### Representation Learning
 
-A strong generative model is needed to draw reasonable scene images from a "prior" knowledge. This is a technique developed at DeepMind for neural scene representation and rendering. The method can generate a strong representation of 3D scenes from very little or even no observations. 
+A strong generative model is needed to draw reasonable scene images from a "prior" knowledge. To this end, a very interesting technique called "neural scene representation and rendering" was developed at DeepMind. 
 
-For example, their network can predict novel views from only two input examples of the same scene. When no examples is given, the network is still able to use prior knowledge to generate meaningful images of random scenes.
+<img src="/assets/nr/relighting_paul.png" width="600"> 
+Figure 15. Neural Scene Representation and Rendering, P. Debevec et al. Siggraph 2000.
+
+The method can generate a strong representation of 3D scenes from very little or even no observations. For example, their network can predict novel views from only two input examples of the same scene. When no examples is given, the network is still able to use prior knowledge to generate meaningful images of random scenes.
 
 The model contains a representation network and a generation network. The generation network uses a recurrent architecture to render a random vector Z into a image. The use of a random vector allows unconditioned scene generation when there is no observation. The choice of a recurrent architecture, as the authors claims, is that a single feedforward pass was not able to obtain satisfactory results. Instead the recurrent network has the ability to correct itself over a number of time steps. 
 
@@ -359,3 +369,5 @@ I'd like to take the opportunity to thank the amazing colleague and collaborator
 [^neuraltexture]: [Deferred Neural Rendering: Image Synthesis using Neural Textures](https://arxiv.org/pdf/1904.12356.pdf) <img src="/assets/nr/neuraltexture.png" width="600"> 
 
 [^neuralmesh]: [Neural 3D Mesh Renderer](http://hiroharu-kato.com/projects_en/neural_renderer.html) <img src="/assets/nr/neuralmesh.png" width="600"> 
+
+[^relighting_sparse]: [Deep Image-Based Relighting from Optimal Sparse Samples](https://cseweb.ucsd.edu/~viscomp/projects/SIG18Relighting/PaperData/relight_paper.pdf) <img src="/assets/nr/relighting_sparse.png" width="600"> 
