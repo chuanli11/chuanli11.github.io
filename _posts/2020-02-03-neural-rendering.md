@@ -269,64 +269,65 @@ The result of this method is pretty awesome. However, it still needs to pre-gene
 
 ##### Representation Learning
 
-A strong generative model is needed to draw reasonable scene images from a "prior" knowledge. To this end, a very interesting technique called "neural scene representation and rendering" was developed at DeepMind. 
+A strong generative model is needed to draw reasonable scene images from a "prior" knowledge. To this end, a very interesting technique called "neural scene representation and rendering" was developed at DeepMind (Figure 15). 
 
-<img src="/assets/nr/relighting_paul.png" width="600"> 
-Figure 15. Neural Scene Representation and Rendering, P. Debevec et al. Siggraph 2000.
+<img src="/assets/nr/deepmind_scene_representation_learning_rendering.png" width="600"> 
+Figure 15. Neural Scene Representation and Rendering, S. Eslami et al. Science 2018.
 
-The method can generate a strong representation of 3D scenes from very little or even no observations. For example, their network can predict novel views from only two input examples of the same scene. When no examples is given, the network is still able to use prior knowledge to generate meaningful images of random scenes.
+The method can generate a strong representation of 3D scenes from very little or even no observations. For example, their network can predict novel views from only two input examples of the same scene (Figure 15, A). When no examples is given, the network is still able to use prior knowledge to generate meaningful images of random scenes.
 
-The model contains a representation network and a generation network. The generation network uses a recurrent architecture to render a random vector Z into a image. The use of a random vector allows unconditioned scene generation when there is no observation. The choice of a recurrent architecture, as the authors claims, is that a single feedforward pass was not able to obtain satisfactory results. Instead the recurrent network has the ability to correct itself over a number of time steps. 
+The model contains a representation network and a generation network. The generation network (Figure 15, B) $$g$$ uses a recurrent architecture to render a random vector $$z$$ into a image. Using such a random vector as input allows unconditioned scene generation when there is no observation. The choice of a recurrent architecture, as the authors claim, is that a single feedforward pass was not able to obtain satisfactory results. In contrast, the recurrent network has the ability to correct itself over a number of time steps. Last but not the least, a query vector $$v$$ is used to control the view of the generated scene.
 
-A query vector is used to control the view of the generated scene. In order to create more meaningful scenes, we need a way to do conditional generation. A representation network is trained for exactly this purpose. It encodes an observation of a scene and its view parameters into a latent representation r. Then r can be used to guide the generation network. Multiple observations are fused by simply adding their representations. 
-
-The the entire network is trained end to end to for novel new prediction.
+In order to accomplish novel view synthesis of an existing scene, observations of the scene are used to condition the generation process. A representation network $$f$$ is trained for exactly this purpose. It encodes an observation of a scene (an image) and its view parameters $$v$$ into a latent representation $$r$$. The generator $$g$$ can only succeed if $$r$$ contains accurate and complete information about the contents of the scene (e.g., the identities, positions, colours and counts of the objects, as well as the room’s colours). Multiple observations are aggregated by element-wise summing of individual representations. The the entire network is trained end to end to for novel new prediction.
 
 The key assumption that makes this method work is that the representation network is forced to find an efficient way of describing the true layout of the scene as accurately as possible, since the generation network is constantly asked to predict images of unseen views during the training.
 
-In the context of machine learning, use such assumptions to build a model from the data is also called “inductive bias”. 
+
 
 
 ##### HoloGAN
 
-One inductive bias I am very excited about is learning can be so much easier if we can separate the appearance from the pose. Because I believe this is something human do.
+In the context of machine learning, the assumptions used in the inductive reasoning process (build a model from the data) is often called “inductive bias”. One inductive bias I am very excited about is __learning can be a lot easier if one can separate the appearance from the pose__. 
 
-This is my four-year old son playing a shape puzzle. The goal is to build an object -- in this case, the flowers, using some primitive shapes. To achieve complete this task, he needs to apply rigid-body transformations to the shapes before finding a good match. 
+<img align="left" style="margin: 10px" src="/assets/nr/eric.jpg" width="300"> 
+
+This is my four-year old son playing a shape puzzle. The goal is to build an object -- in this case, the flowers, using some basic building blocks such as diamond, square etc. To achieve complete this task, he needs to apply rigid-body transformations to the building blocks before finding a good match on the board. 
 
 It is amazing to see this is something human can do with little or no effort. In contrast, most of the current neural networks are designed to struggle with it. 
 
-For example, as a local operator, convolution is for sure not the right choice for rigid body transformation. Fully connected layer may be able to do it but at the cost of network capacity due to the need of memorizing all the different configurations.
+As a local operator, convolution is for sure not the right choice for (global) rigid body transformation. Fully connected layer may be able to compute it but at the cost of network capacity due to the need of memorizing all the different configurations.
 
-So we wonder what if we use conventional coordinate transformation to represent the pose, and separate the pose from learning the appearance of an object. Will that make the task easier?
+So we wonder what if we just use conventional coordinate transformation to represent the pose, and separate the pose from learning the appearance of an object. Will that make the task easier?
 
 
 We tried this idea in a recent work called HoloGAN. HoloGAN is a novel GAN network that learns 3D representations from natural images without 3D supervision. By no 3D supervision I mean no 3D shapes, no labels for camera view etc. The cool thing about this method is that learning is driven by the inductive bias instead of supervision.
 
+<img align="left" style="margin: 10px" src="/assets/nr/hologan_method.gif" width="600"> 
+Figure 16. HoloGAN: Unsupervised learning of 3D representations from natural images. Thu Nguyen-Phuoc et al, ICCV 2019.
 
-Conventional generative models use 2D kernels to generate images and make few assumptions about the 3D world. For example, conditional GANs using either feature concatenation or feature-wise transformation to control the pose of the objects in the generated images. Unless GT labels were used during the training, poses can only be learnt as latent variables, which can be hard to interpret. 
-
-At the sametime, forcing 2D CNN to do 3D object rotation will create artefacts in the results.
+Conventional generative models[^conditionalgan_example] use 2D kernels to generate images and make few assumptions about the 3D world. For example, conditional GANs using either feature concatenation or feature-wise transformation to control the pose of the objects in the generated images. Unless GT labels were used during the training, poses can only be learnt as latent variables, which can be hard to interpret. At the sametime, forcing 2D CNN to do 3D object rotation will create artefacts[^conditionalgan_example] in the results.
 
 
-In contrast, HoloGAN learns a better representations by separating the pose from the learning of the appearance. These are some faces randomly generated by HoloGAN. Once again, I’d like to emphasize that no 3D models or GT pose labels are used during the training. HoloGAN learns purely from 2D, unlabeled data. 
+In contrast, HoloGAN learns a better representations by separating the pose from the learning of the appearance. These[^hologan_face] are some faces randomly generated by HoloGAN. Once again, I’d like to emphasize that no 3D models or GT pose labels are used during the training. HoloGAN learns purely from 2D, unlabeled data. 
 
-The key is that HoloGAN uses 3D neural voxels as its latent representation. Such a representation is both explicit in 3D and expressive in semantics, which improves the controllability and quality of the downstream tasks. 
+The key is that HoloGAN uses 3D neural voxels (Figure 16) as its latent representation. Such a representation is both explicit in 3D and expressive in semantics, which improves the controllability and quality of the downstream tasks. 
 
-HoloGAN uses a 3D generator to generate neural voxels, and a RenderNet to render them into 2D images. The 3D generator is an extension of the styleGAN into 3D space. It takes two inputs: The first one is a learnt constant tensor. You can think of it as a “template” for a particular object category, such as human face, cars etc. It will be up-sampled to a neural voxel using a sequence 3D convolutions. The second input is a random vector as a “style” controller. It is mapped to the affine parameters for adaptive instance normalization throughout the entire pipeline. 
+HoloGAN uses a 3D generator to generate neural voxels, and a RenderNet to render them into 2D images (Figure 17). The 3D generator is an extension of the styleGAN[^stylegan] into 3D space. It takes two inputs: The first one is a learnt constant tensor. You can think of it as a “template” for a particular object category, such as human face, cars etc. It will be up-sampled to a neural voxel using a sequence 3D convolutions. The second input is a random vector as a “style” controller. It is mapped to the affine parameters for adaptive instance normalization throughout the entire pipeline. 
 
 The output of the 3D generator network (the neural voxels) is mapped to 2D images using RenderNet. For unsupervised learning, a discriminative network is used to classify the output of HoloGANs against randomly sampled real world images. 
 
-During training, it is crucially important to apply random rigidbody transformation to the neural voxels. This is how the inductive bias of 3D world is injected into the learning process: The network generates images from arbitrary poses not by memorizing all configurations but by generating a representation that is unbreakable under 3D rigid-body transformations. 
+<img align="left" style="margin: 10px" src="/assets/nr/hologan_architecture.png" width="600"> 
+Figure 17. HoloGAN architecture.
 
-In fact, without this random perturbation, the network was not able to learn
+During training, it is crucially important to apply random rigidbody transformations to the neural voxels. This is how the inductive bias of 3D world is injected into the learning process: The network generates images from arbitrary poses not by memorizing all configurations but by generating a representation that is __unbreakable under arbitary 3D rigid-body transformations__. In fact, without this random perturbation, the network was not able to learn.
 
-Let’s see some results: Here are some results on a car dataset. The method is pretty robust with transitions between views and complex backgrounds. Notice that the network can only generate poses that existed in the training dataset. For example, there is a relatively small range of elevation in the car dataset, so the network does not extrapolate beyond that range. 
+Let’s see some results: Here[^hologan_cars_azi] are some results on a car dataset. The method is pretty robust with transitions between views and complex backgrounds. Notice that the network can only generate poses that existed in the training dataset. For example, there is a relatively small range of elevation in the car dataset, so the network does not extrapolate beyond that range[^hologan_cars_ele]. 
 
-However, the network is surely able to learn once there are more data comes in. For example, we trained the network with synthetic images rendered with ShapeNet models. The network is able to do 180 degree rotation in elevation.
+However, the network is surely able to learn once there are more data comes in. For example, we trained the network with synthetic images rendered with ShapeNet models. The network is able to do 180 degree rotation in elevation[^hologan_chairs_ele].
 
-We also tried some really challenging dataset. For example, the SUN bedroom dataset. This is extremely difficult to do because of the much bigger appearance variation across the dataset. As the consequence, the signal of pose is much weaker during the training process. We thought our method would completely break here. However, the result is very encouraging. For example, the main structure of the bedroom is very well preserved while rotating along the azimuth. The elevation is more challenging probably due to the lack of examples in that direction. 
+We also tried some really challenging dataset. For example, the SUN bedroom dataset. This is extremely difficult to do because of the much bigger appearance variation across the dataset. As the consequence, the signal of pose is much weaker during the training process. We thought our method would completely break here. However, the result is very encouraging. For example, the main structure of the bedroom is very well preserved while rotating along the azimuth[^hologan_bedroom_azi]. The elevation is more challenging probably due to the lack of examples in that direction[^hologan_bedroom_ele]. 
 
-Another surprise is that HoloGAN seems to divide appearance further into shape and texture. To test, we can sample two random style control vectors, z1 and z2. If we feed z1 to the 3D generator and Z2 to the RenderNet, we will see that z1 controls the shape of the object, and z2 controls the texture: Every column in this image use the same z1 but different z2. So they have same shape but different texture. Every row in this image use the same z2 but different z1, so they have the same texture but different shape. To me this is really fascinating as it reminds me about the vertex shader and the fragment shader in graphics rendering pipeline, where the vertex shader changes the geometry and the fragment shaders changes the color.
+Another surprise is that HoloGAN seems to divide appearance further into shape and texture. To test, we can sample two random style control vectors, $$z1$$ and $$z2$$. If we feed $$z1$$ to the 3D generator and $$z2$$ to the RenderNet, we will see that $$z1$$ controls the shape of the object, and $$z2$$ controls the texture[^hologan_shape_texture]: Every column in this image use the same $$z1$$ but different $$z2$$. So they have same shape but different texture. Every row in this image use the same $$z2$$ but different $$z1$$, so they have the same texture but different shape. To me this is really fascinating as it reminds me about the vertex shader and the fragment shader in graphics rendering pipeline, where the vertex shader changes the geometry and the fragment shaders changes the color.
 
 
 ### Conclusion
@@ -371,3 +372,26 @@ I'd like to take the opportunity to thank the amazing colleague and collaborator
 [^neuralmesh]: [Neural 3D Mesh Renderer](http://hiroharu-kato.com/projects_en/neural_renderer.html) <img src="/assets/nr/neuralmesh.png" width="600"> 
 
 [^relighting_sparse]: [Deep Image-Based Relighting from Optimal Sparse Samples](https://cseweb.ucsd.edu/~viscomp/projects/SIG18Relighting/PaperData/relight_paper.pdf) <img src="/assets/nr/relighting_sparse.png" width="600"> 
+
+
+[^conditionalgan_example]: <img src="/assets/nr/conditionalgan_example.png" width="600"> Conditional GAN and InfoGAN (X. Chen et al).
+
+
+[^hologan_face]: <img src="/assets/nr/hologan_celebA_small.gif" width="600"> Random faces generated by HoloGAN.
+
+[^stylegan]: [A Style-Based Generator Architecture for Generative Adversarial Networks](https://arxiv.org/pdf/1812.04948.pdf). T. Karras et al.
+
+[^hologan_cars_azi]: HoloGAN results: randomly sampled cars + azimuth rotation <img src="/assets/nr/hologan_cars_azi_small.gif" width="600"> 
+
+[^hologan_cars_ele]: HoloGAN results: randomly sampled cars + elevation rotation <img src="/assets/nr/hologan_cars_ele_small.gif" width="600"> 
+
+[^hologan_chair_azi]: HoloGAN results: randomly sampled chairs + azimuth rotation <img src="/assets/nr/hologan_chair_azi_small.gif" width="600">
+
+[^hologan_chair_ele]: HoloGAN results: randomly sampled chairs + elevation rotation <img src="/assets/nr/hologan_chair_ele_small.gif" width="600">
+
+[^hologan_bedroom_azi]: HoloGAN results: randomly sampled bedrooms + azimuth rotation <img src="/assets/nr/hologan_bedroom_azi_small.gif" width="600">
+
+[^hologan_bedroom_ele]: HoloGAN results: randomly sampled bedrooms + elevation rotation <img src="/assets/nr/hologan_bedroom_ele_small.gif" width="600">
+
+[^hologan_shape_texture]: HoloGAN results: mixing shape and texture using different control vectors. <img src="/assets/nr/hologan_shape_texture.png" width="600">
+
