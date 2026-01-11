@@ -14,7 +14,7 @@ Vera Rubin NVL72 represents the latest progress in rack-scale AI infrastructure.
 
 The numeric claims are, in my best effort, labeled into three categories: 
 
-- [Spec]: directly from NVIDIA product spec, or computed ratio from those specs
+- \[Spec\]: directly from NVIDIA product spec, or computed ratio from those specs
 - [NVIDIA claim] = NVIDIA’s marketing/benchmark claim that might involve specific optimization
 - [Hypothesis] = my intuition
 
@@ -23,29 +23,29 @@ The numeric claims are, in my best effort, labeled into three categories:
 
 - **Rubin GPU** + **HBM4 GPU memory**
     - [NVIDIA Claim] `1.6-5x` FLOPS increase, benefits per‑GPU throughput.
-    - [Spec] `2.74×` higher GPU memory bandwidth, benefits workloads that have low compute-to-memory access ratio. For example, memory-bound kernels (element-wise operations), decoding with large KV footprints etc.
+    - \[Spec\] `2.74×` higher GPU memory bandwidth, benefits workloads that have low compute-to-memory access ratio. For example, memory-bound kernels (element-wise operations), decoding with large KV footprints etc.
 - **Vera CPU**
-    - [Spec] `2x` higher CPU-GPU bandwidth, benefits KV-cache offload.
-    - [Spec] `3x` CPU memory capacity, benefits large datasets caching.
+    - \[Spec\] `2x` higher CPU-GPU bandwidth, benefits KV-cache offload.
+    - \[Spec\] `3x` CPU memory capacity, benefits large datasets caching.
 - **NVLink 6 Switch**
-    - [Spec] `2x` intra-rack GPU to GPU communication bandwidth for scaling-up, benefits all reduce operations e.g. MoE all-to-all, model parallelism.
+    - \[Spec\] `2x` intra-rack GPU to GPU communication bandwidth for scaling-up, benefits all reduce operations e.g. MoE all-to-all, model parallelism.
 - **ConnectX-9** **SuperNIC**
-    - [Spec] `2x` inter-rack GPU to GPU communication bandwidth for scaling-out, benefits operations across different racks.
+    - \[Spec\] `2x` inter-rack GPU to GPU communication bandwidth for scaling-out, benefits operations across different racks.
 - **Spectrum‑X Photonics (Co-packaged Optics)**
     - [NVIDIA Claim] `5×` better power efficiency, [NVIDIA Claim] `10×` higher resiliency for scale-out network, reducing cost & reliability penalty of large GPU fabrics.
 - **BlueField‑4**
-    - [Spec] `2x` Data‑in‑transit encryption, benefits multi-tenant, zero-trust security.
-    - [Spec] `3.3x` memory bandwidth, benefits checkpoint bursts and dataset streaming. Together with Spectrum-X, BF-4 creates an extra tier of “warm” KV cache, benefits long-context and agentic workloads.
+    - \[Spec\] `2x` Data‑in‑transit encryption, benefits multi-tenant, zero-trust security.
+    - \[Spec\] `3.3x` memory bandwidth, benefits checkpoint bursts and dataset streaming. Together with Spectrum-X, BF-4 creates an extra tier of “warm” KV cache, benefits long-context and agentic workloads.
 
 ## Breaking Down the Gains: What’s Different and Why It Matters
 
 
 **Rubin GPU & NVLink 6 Switch & ConnectX-9 SuperNIC**
 
-- [Spec] `1.6x` [more transistors](https://www.hpcwire.com/aiwire/2026/01/06/nvidia-says-rubin-will-deliver-5x-ai-inference-boost-over-blackwell/) v.s. Blackwell ultra. So by default I expect [Hypothesis] `~1.6x` higher FLOPS for my everyday GPU workloads.
-- Rack-level GPU memory bandwidth sees a [Spec] `2.74×` increase, from GB300 NVL72’s 576 TB/s to VR NVL72’s 1580 TB/s. This comes from the HBM3E to HBM4 upgrade.
-- Per GPU-GPU bandwidth inside of a rack sees a [Spec] `2x` increase, from 1.8 TB/s to 3.6 TB/s. This comes from NVLink 6 Switch, which [doubles](https://www.nvidia.com/en-us/data-center/nvlink/?ncid=pa-srch-goog-156-prsp-rsa-en-us-1-l1) the number of links per GPU from 18 to 36.
-- Per GPU-GPU bandwidth between different racks sees a [Spec] `2x` increase, from 800 Gb/s to 1.6 Tb/s. This comes from the doubling of per-rack OSFP ports and ConnectX-9 NIC, both from [72](https://www.nvidia.com/en-us/data-center/dgx-gb300/) to [144](https://www.notion.so/Vera-Rubin-NVL72-What-s-New-and-Why-It-Matters-2e4b856e4027801d85dfdb1cbe92ba82?pvs=21).
+- \[Spec\] `1.6x` [more transistors](https://www.hpcwire.com/aiwire/2026/01/06/nvidia-says-rubin-will-deliver-5x-ai-inference-boost-over-blackwell/) v.s. Blackwell ultra. So by default I expect [Hypothesis] `~1.6x` higher FLOPS for my everyday GPU workloads.
+- Rack-level GPU memory bandwidth sees a \[Spec\] `2.74×` increase, from GB300 NVL72’s 576 TB/s to VR NVL72’s 1580 TB/s. This comes from the HBM3E to HBM4 upgrade.
+- Per GPU-GPU bandwidth inside of a rack sees a \[Spec\] `2x` increase, from 1.8 TB/s to 3.6 TB/s. This comes from NVLink 6 Switch, which [doubles](https://www.nvidia.com/en-us/data-center/nvlink/?ncid=pa-srch-goog-156-prsp-rsa-en-us-1-l1) the number of links per GPU from 18 to 36.
+- Per GPU-GPU bandwidth between different racks sees a \[Spec\] `2x` increase, from 800 Gb/s to 1.6 Tb/s. This comes from the doubling of per-rack OSFP ports and ConnectX-9 NIC, both from [72](https://www.nvidia.com/en-us/data-center/dgx-gb300/) to [144](https://www.notion.so/Vera-Rubin-NVL72-What-s-New-and-Why-It-Matters-2e4b856e4027801d85dfdb1cbe92ba82?pvs=21).
 
 My takes: Compute (FLOPS) & communication (bandwidth) are the bread and butter of today’s rack-level system performance. Vera Rubin NVL72 is likely to be [Hypothesis] `1.5-2x` faster than GB300 NVL72 for most of the “out-of-box” workloads, depends on whether compute or communication is the bottleneck. There are some specific use cases where the performance boost can be higher. For example:
 
@@ -55,9 +55,9 @@ My takes: Compute (FLOPS) & communication (bandwidth) are the bread and butter o
 
 **Vera CPU**
 
-- NVLink-C2C bidirectional bandwidth [Spec] `2x` to Vera-Rubin’s [1.8 TB/s](https://www.nvidia.com/en-us/data-center/vera-cpu/), from Grace-Hopper’s [900 GB/s](https://www.nvidia.com/en-us/data-center/grace-cpu/?ncid=pa-srch-goog-156-prsp-rsa-en-us-1-l1).
-- Per rack CPU memory capacity [Spec] `3x` to 54 TB, from GB300 NVL72’s 17 TB.
-- [Spec] `+22.2%` more CPU cores per rack. No official information on what core speed does Vera’s [88 Olympus cores](https://www.nvidia.com/en-us/data-center/vera-cpu/) offer. But we do know Grace CPU has [72 Neoverse™ V2 cores](https://www.nvidia.com/en-us/data-center/grace-cpu-superchip/?ncid=pa-srch-goog-156-prsp-rsa-en-us-1-l1) each runs at [3.1GHz](https://nvdam.widen.net/s/rrgqqnpbz8/grace-datasheet-gh200-grace-hopper-superchip-3773000%20).
+- NVLink-C2C bidirectional bandwidth \[Spec\] `2x` to Vera-Rubin’s [1.8 TB/s](https://www.nvidia.com/en-us/data-center/vera-cpu/), from Grace-Hopper’s [900 GB/s](https://www.nvidia.com/en-us/data-center/grace-cpu/?ncid=pa-srch-goog-156-prsp-rsa-en-us-1-l1).
+- Per rack CPU memory capacity \[Spec\] `3x` to 54 TB, from GB300 NVL72’s 17 TB.
+- \[Spec\] `+22.2%` more CPU cores per rack. No official information on what core speed does Vera’s [88 Olympus cores](https://www.nvidia.com/en-us/data-center/vera-cpu/) offer. But we do know Grace CPU has [72 Neoverse™ V2 cores](https://www.nvidia.com/en-us/data-center/grace-cpu-superchip/?ncid=pa-srch-goog-156-prsp-rsa-en-us-1-l1) each runs at [3.1GHz](https://nvdam.widen.net/s/rrgqqnpbz8/grace-datasheet-gh200-grace-hopper-superchip-3773000%20).
 
 My takes: Rack-scale systems like NVL72 don’t use CPU as the primary compute engine (GPUs handle matrix ops). CPU still matters to peripheral workloads. For example:
 
@@ -67,7 +67,7 @@ My takes: Rack-scale systems like NVL72 don’t use CPU as the primary compute e
 
 **BlueField-4**
 
-- Upgrade from BF-3 on all fronts: compute cores [Spec] `4x` to 64 Arm Neoverse V2, [Spec] `4x` memory capacity to 128GB, [Spec] `3.3x` memory bandwidth to 250 GB/s, NVMe storage disaggregation `2x` to 20M at 4K IOPs, Data‑in‑transit encryption [Spec] `2x` to 800 Gb/s,
+- Upgrade from BF-3 on all fronts: compute cores \[Spec\] `4x` to 64 Arm Neoverse V2, \[Spec\] `4x` memory capacity to 128GB, \[Spec\] `3.3x` memory bandwidth to 250 GB/s, NVMe storage disaggregation `2x` to 20M at 4K IOPs, Data‑in‑transit encryption \[Spec\] `2x` to 800 Gb/s,
 
 My takes: infrastructure services (networking, storage, telemetry, security) become a bottleneck at AI-factory scale if they run on host CPUs; BF4 moves more of that off-host for more deterministic behavior and better utilization.
 
