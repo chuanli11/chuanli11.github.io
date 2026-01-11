@@ -99,8 +99,8 @@ My takes: Integrated optics reduces the number of independent components and sho
 
 Compared to Blackwell NVL72
 
-- [NVIDIA Claim] __4×__ fewer GPUs to train a 10T MoE model on 100T tokens in 1 month. (*Figure 37,* [NVIDIA Rubin Platform blog](https://developer.nvidia.com/blog/inside-the-nvidia-rubin-platform-six-new-chips-one-ai-supercomputer/)*)*
-- [NVIDIA Claim] __10x__ higher token throughput per megawatt, at ~210 TPS (Tokens Per Second), for Kimi‑K2‑Thinking 1T MoE, 32K input / 8K output. (*Figure 38,* [NVIDIA Rubin Platform blog](https://developer.nvidia.com/blog/inside-the-nvidia-rubin-platform-six-new-chips-one-ai-supercomputer/)*)*
+- [NVIDIA Claim] __4×__ fewer GPUs to train a 10T MoE model on 100T tokens in 1 month. (Figure 37, [NVIDIA Rubin Platform blog](https://developer.nvidia.com/blog/inside-the-nvidia-rubin-platform-six-new-chips-one-ai-supercomputer/))
+- [NVIDIA Claim] __10x__ higher token throughput per megawatt, at ~210 TPS (Tokens Per Second), for Kimi‑K2‑Thinking 1T MoE, 32K input / 8K output. (Figure 38, [NVIDIA Rubin Platform blog](https://developer.nvidia.com/blog/inside-the-nvidia-rubin-platform-six-new-chips-one-ai-supercomputer/))
 - [NVIDIA Claim] __5x__ higher sustained TPS for long-context and agentic workloads. Because Dynamo KV block managers +  [ICMS](https://developer.nvidia.com/blog/introducing-nvidia-bluefield-4-powered-inference-context-memory-storage-platform-for-the-next-frontier-of-ai/) (with BlueField‑4 + Spectrum-X) are able to prestage context and reducing decoder stalls, preventing GPUs from “redundant recomputation of history” and “wasting energy on idle cycles”.
 
 ## What Stays the Same
