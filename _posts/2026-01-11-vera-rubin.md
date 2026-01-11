@@ -10,9 +10,9 @@ toc: true
 * TOC
 {:toc}
 
-Vera Rubin NVL72 represents the latest progress in rack-scale AI infrastructure. This write-up walks through the key architectural innovations, from Rubin GPUs and Vera CPUs to NVLink 6, ConnectX-9, Spectrum-X, and BlueField-4, and breaks down which changes drive how much improvement for what workloads. 
+Vera Rubin NVL72 represents the latest progress in rack-scale AI infrastructure. This write-up walks through the key architectural updates, from Rubin GPUs and Vera CPUs to NVLink 6, ConnectX-9, Spectrum-X, and BlueField-4, and breaks down which changes drive how much improvement for what workloads. 
 
-The numeric claims are, in my best effort, labeled into three categories: 
+The numeric claims are, to the best of my ability, grouped into three categories: 
 
 - \[Spec\]: directly from NVIDIA product spec, or computed ratio from those specs
 - [NVIDIA claim] = NVIDIA’s marketing/benchmark claim that might involve specific optimization
