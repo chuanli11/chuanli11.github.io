@@ -45,7 +45,7 @@ The numeric claims are, in my best effort, labeled into three categories:
 - \[Spec\] `1.6x` [more transistors](https://www.hpcwire.com/aiwire/2026/01/06/nvidia-says-rubin-will-deliver-5x-ai-inference-boost-over-blackwell/) v.s. Blackwell ultra. So by default I expect [Hypothesis] `~1.6x` higher FLOPS for my everyday GPU workloads.
 - Rack-level GPU memory bandwidth sees a \[Spec\] `2.74×` increase, from GB300 NVL72’s 576 TB/s to VR NVL72’s 1580 TB/s. This comes from the HBM3E to HBM4 upgrade.
 - Per GPU-GPU bandwidth inside of a rack sees a \[Spec\] `2x` increase, from 1.8 TB/s to 3.6 TB/s. This comes from NVLink 6 Switch, which [doubles](https://www.nvidia.com/en-us/data-center/nvlink/?ncid=pa-srch-goog-156-prsp-rsa-en-us-1-l1) the number of links per GPU from 18 to 36.
-- Per GPU-GPU bandwidth between different racks sees a \[Spec\] `2x` increase, from 800 Gb/s to 1.6 Tb/s. This comes from the doubling of per-rack OSFP ports and ConnectX-9 NIC, both from [72](https://www.nvidia.com/en-us/data-center/dgx-gb300/) to [144](https://www.notion.so/Vera-Rubin-NVL72-What-s-New-and-Why-It-Matters-2e4b856e4027801d85dfdb1cbe92ba82?pvs=21).
+- Per GPU-GPU bandwidth between different racks sees a \[Spec\] `2x` increase, from 800 Gb/s to 1.6 Tb/s. This comes from the doubling of per-rack OSFP ports and ConnectX-9 NIC, both from [72](https://www.nvidia.com/en-us/data-center/dgx-gb300/) to [144](https://www.nvidia.com/en-us/data-center/dgx-vera-rubin-nvl72/).
 
 My takes: Compute (FLOPS) & communication (bandwidth) are the bread and butter of today’s rack-level system performance. Vera Rubin NVL72 is likely to be [Hypothesis] `1.5-2x` faster than GB300 NVL72 for most of the “out-of-box” workloads, depends on whether compute or communication is the bottleneck. There are some specific use cases where the performance boost can be higher. For example:
 
@@ -90,7 +90,7 @@ My takes: Integrated optics reduces the number of independent components and sho
 
 **Power smoothing for spike usage**
 
-- coordinating power draw across GPUs, CPUs, networking, and system electronics inside the rack, so that short spikes don’t appear as large peaks at the facility level. This enables up to [NVIDIA Claim] [30% more](https://www.notion.so/Vera-Rubin-NVL72-What-s-New-and-Why-It-Matters-2e4b856e4027801d85dfdb1cbe92ba82?pvs=21) compute provisioning within the same power envelope.
+- coordinating power draw across GPUs, CPUs, networking, and system electronics inside the rack, so that short spikes don’t appear as large peaks at the facility level. This enables up to [NVIDIA Claim] [30% more](https://developer.nvidia.com/blog/inside-the-nvidia-rubin-platform-six-new-chips-one-ai-supercomputer/#energy_for_tokens_thermal_and_power_innovations%C2%A0) compute provisioning within the same power envelope.
 - This is particularly helpful for accommodating synchronized all-to-all communication during large-scale training, and bursty inference demands.
 - NVIDIA achieves this by reshaping spiky power swings into controlled ramps bounded by a stable power ceiling and floor, and use a local energy buffering (no official details on the specific components) to absorb the demand. In particular, Vera Rubin NVL72 has [NVIDIA Claim] [~6× more](https://developer.nvidia.com/blog/inside-the-nvidia-rubin-platform-six-new-chips-one-ai-supercomputer/) local energy buffering than Blackwell Ultra.
 - With new liquid-cooled design, Vera Rubin NVL72 nearly [NVIDIA Claim] `2x` its thermal performance in the same rack footprint.
