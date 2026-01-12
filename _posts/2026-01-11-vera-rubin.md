@@ -21,6 +21,8 @@ The numeric claims are, to the best of my ability, grouped into three categories
 
 ## TL;DR: Six New Chips and What We Gain from Them
 
+Unless otherwise noted, all comparisons are between VR NVL72 and GB300 NVL72.
+
 - **Rubin GPU** + **HBM4 GPU memory**
     - [NVIDIA Claim] __1.6-5x__ FLOPS increase, benefits per‑GPU throughput.
     - \[Spec\] __2.74×__ higher GPU memory bandwidth, benefits workloads that have low compute-to-memory access ratio. For example, memory-bound kernels (element-wise operations), decoding with large KV footprints etc.
